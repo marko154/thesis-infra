@@ -1,0 +1,6 @@
+# Exact CLI pins for every layout and measurement.
+# required_version in .tf files is a compatibility floor, not this pin.
+[tools]
+terraform = "1.15.9" # ≥ 1.13 for Stacks GA
+opentofu = "1.12.6"
+terragrunt = "1.1.3"
