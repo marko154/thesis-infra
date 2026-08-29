@@ -8,14 +8,11 @@ dependency "application" {
 }
 
 terraform {
-  source = "${dirname(find_in_parent_folders("terragrunt.hcl"))}/../../modules/monitoring"
+  source = "${dirname(find_in_parent_folders("root.hcl"))}/../../modules/monitoring"
 }
 
 inputs = {
-  environment         = include.unit.locals.environment
-  region              = include.unit.locals.region
-  log_retention_days  = include.unit.locals.log_retention_days
-  cpu_alarm_threshold = include.unit.locals.cpu_alarm_threshold
+  log_retention_days  = 7
+  cpu_alarm_threshold = 80
   cluster_name        = dependency.application.outputs.cluster_name
-  tags                = include.unit.locals.common_tags
 }

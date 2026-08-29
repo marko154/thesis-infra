@@ -8,15 +8,12 @@ dependency "network" {
 }
 
 terraform {
-  source = "${dirname(find_in_parent_folders("terragrunt.hcl"))}/../../modules/application"
+  source = "${dirname(find_in_parent_folders("root.hcl"))}/../../modules/application"
 }
 
 inputs = {
-  environment   = include.unit.locals.environment
-  region        = include.unit.locals.region
-  instance_size = include.unit.locals.instance_size
-  replica_count = include.unit.locals.replica_count
-  app_version   = include.unit.locals.app_version
+  instance_size = "small"
+  replica_count = 1
+  app_version   = "1.0.0"
   subnet_ids    = dependency.network.outputs.private_subnet_ids
-  tags          = include.unit.locals.common_tags
 }

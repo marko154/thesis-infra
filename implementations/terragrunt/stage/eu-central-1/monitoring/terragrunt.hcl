@@ -1,21 +1,11 @@
 include "root" {
-  path = find_in_parent_folders("terragrunt.hcl")
+  path = find_in_parent_folders("root.hcl")
 }
 
-include "unit" {
-  path = find_in_parent_folders("unit.hcl")
+include "envcommon" {
+  path = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/monitoring.hcl"
 }
 
-include "stack" {
-  path = "${dirname(find_in_parent_folders("terragrunt.hcl"))}/_envcommon/monitoring.hcl"
-}
-
-generate "provider" {
-  path      = "provider.tf"
-  if_exists = "overwrite_terragrunt"
-  contents  = <<PROVIDER
-provider "aws" {
-  region = "${include.unit.locals.region}"
-}
-PROVIDER
+inputs = {
+  log_retention_days = 30
 }
