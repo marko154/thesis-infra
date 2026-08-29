@@ -12,7 +12,5 @@ terraform {
 }
 
 inputs = {
-  log_retention_days  = 7
-  cpu_alarm_threshold = 80
-  cluster_name        = dependency.application.outputs.cluster_name
+  cluster_name = dependency.application.outputs.cluster_name
 }

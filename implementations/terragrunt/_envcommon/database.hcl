@@ -12,9 +12,5 @@ terraform {
 }
 
 inputs = {
-  instance_size         = "small"
-  storage_gb            = 20
-  high_availability     = false
-  backup_retention_days = 1
-  subnet_ids            = dependency.network.outputs.private_subnet_ids
+  subnet_ids = dependency.network.outputs.private_subnet_ids
 }

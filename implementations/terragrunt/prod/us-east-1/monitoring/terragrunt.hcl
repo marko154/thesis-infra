@@ -5,8 +5,3 @@ include "root" {
 include "envcommon" {
   path = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/monitoring.hcl"
 }
-
-inputs = {
-  log_retention_days  = 90
-  cpu_alarm_threshold = 75
-}

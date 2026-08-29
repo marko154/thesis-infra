@@ -12,8 +12,5 @@ terraform {
 }
 
 inputs = {
-  instance_size = "small"
-  replica_count = 1
-  app_version   = "1.0.0"
-  subnet_ids    = dependency.network.outputs.private_subnet_ids
+  subnet_ids = dependency.network.outputs.private_subnet_ids
 }
