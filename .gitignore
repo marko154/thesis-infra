@@ -1,2 +1,28 @@
-
 .DS_Store
+
+# Terraform / OpenTofu
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terragrunt
+.terragrunt-cache/
+.terragrunt-stack/
+
+# Generated experiment / measurement output (keep structure, ignore data)
+results/raw/*
+!results/raw/.gitkeep
+results/reports/*
+!results/reports/.gitkeep
+
+# Local env
+.env
+.env.*
+
