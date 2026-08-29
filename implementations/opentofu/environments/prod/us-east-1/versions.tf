@@ -8,7 +8,11 @@ terraform {
     }
   }
 
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "s3" {
+    bucket       = "thesis-tfstate-559338556370"
+    key          = "opentofu/prod/us-east-1/terraform.tfstate"
+    region       = "eu-central-1"
+    encrypt      = true
+    use_lockfile = true
   }
 }

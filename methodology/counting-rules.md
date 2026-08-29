@@ -18,6 +18,7 @@ Rules for reproducible measurement. Apply identically to all three implementatio
 - `results/`, `experiments/` output artifacts
 - `scripts/` (measurement tooling, not IaC config)
 - `methodology/`, `docs/`, `README.md`
+- `bootstrap/` — not an approach; exclude from approach authored-line totals
 
 ## Line counting
 
@@ -46,7 +47,10 @@ For Terragrunt:
 
 After `init` + `plan` for all units:
 
-- Count distinct state files on disk
+- Count distinct **remote state keys** (S3 object keys, including the
+  workspaces prefix `workspaces/<unit>/…`), not files on disk
+- Exclude bootstrap local state
+- Terraform Stacks: count HCP-managed deployment states, not S3 keys
 - Record resource count per state (`terraform state list` / equivalent)
 
 ## Equivalence verification

@@ -3,10 +3,14 @@ locals {
 }
 
 remote_state {
-  backend = "local"
+  backend = "s3"
 
   config = {
-    path = "${get_terragrunt_dir()}/terraform.tfstate"
+    bucket       = "thesis-tfstate-559338556370"
+    key          = "terragrunt/${path_relative_to_include()}/terraform.tfstate"
+    region       = "eu-central-1"
+    encrypt      = true
+    use_lockfile = true
   }
 
   generate = {

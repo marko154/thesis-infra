@@ -27,9 +27,10 @@ See [methodology/reference-scenario.md](methodology/reference-scenario.md) for p
 ## Repository layout
 
 ```text
+bootstrap/         S3 state bucket (not a comparison approach)
 methodology/       Metrics, counting rules, change catalog, scenario definition
 modules/           Shared AWS modules used by all implementations
-implementations/   terraform-workspaces | terragrunt | opentofu
+implementations/   terraform-workspaces | terragrunt | opentofu | terraform-stacks
 experiments/       Standardized change branches/commits (future)
 scripts/           validate, plan wrappers, measurement (future)
 results/           Raw outputs and generated reports
@@ -55,9 +56,37 @@ mise install
 | Terragrunt | `implementations/terragrunt` | 1.1.3 |
 | AWS CLI / credentials | `plan` only | — |
 
+## Remote state
+
+Workspaces, Terragrunt, and OpenTofu store state in one S3 bucket with
+native S3 locking (`use_lockfile = true`). There is no DynamoDB lock
+table. Terraform Stacks keep HCP-managed state.
+
+Create the bucket once from `bootstrap/` (that apply is bootstrap, not
+a comparison measurement and not the parked validation apply):
+
+```bash
+cd bootstrap
+terraform init
+terraform apply
+```
+
+Key layout (one bucket, namespaced keys):
+
+| Approach | Keys |
+| --- | --- |
+| Workspaces | `workspaces/<unit>/terraform.tfstate` (S3 workspace prefix; one backend) |
+| OpenTofu | `opentofu/<env>/<region>/terraform.tfstate` (one key per unit root) |
+| Terragrunt | `terragrunt/<env>/<region>/<module>/terraform.tfstate` (one key per stack) |
+| Stacks | HCP-managed; not this bucket |
+
+The bucket name is `thesis-tfstate-<account_id>` in `eu-central-1`.
+Bootstrap derives it from the caller identity; the OSS backend blocks
+repeat the same literal (Terraform cannot interpolate a backend).
+
 ## Plan-only workflow
 
-The thesis evaluation path uses **`terraform plan` / `tofu plan`** against AWS. No `apply` is required.
+The thesis evaluation path uses **`terraform plan` / `tofu plan`** against AWS. No payload `apply` is required. Apply `bootstrap/` first so `init` has a bucket.
 
 ```bash
 # Terraform workspaces (example: dev)
@@ -77,7 +106,7 @@ terragrunt init
 terragrunt plan
 ```
 
-AWS credentials must be configured locally. State uses **local backends** in this scaffold; remote backends can be added later without changing module interfaces.
+AWS credentials must be configured locally.
 
 ## Next steps
 

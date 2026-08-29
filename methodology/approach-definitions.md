@@ -15,7 +15,7 @@ How the three compared implementations differ. **Only organization and state lay
 
 | Aspect | Choice |
 | --- | --- |
-| State isolation | One backend; **workspace per deployment unit** (`dev-eu-central-1`, …) |
+| State isolation | One S3 backend; **workspace per deployment unit** (`workspaces/<unit>/terraform.tfstate`) |
 | Config selection | `-var-file=vars/<unit>.tfvars` + workspace name encodes unit |
 | Module wiring | Root `main.tf` calls all four shared modules |
 | DRY mechanism | Shared `locals` defaults + per-unit tfvars overrides |
@@ -28,7 +28,7 @@ How the three compared implementations differ. **Only organization and state lay
 
 | Aspect | Choice |
 | --- | --- |
-| State isolation | **Separate state file per stack** (network, edge, application, database, monitoring × unit) |
+| State isolation | **Separate S3 key per stack** (`terragrunt/<env>/<region>/<module>/terraform.tfstate`) |
 | Config selection | `inputs` blocks in leaf `terragrunt.hcl`; env/region from directory path |
 | Module wiring | Each stack is a thin wrapper pointing at `modules/<name>` |
 | DRY mechanism | `include` root config, `_envcommon/*.hcl`, `dependency` blocks between stacks |
@@ -41,7 +41,7 @@ How the three compared implementations differ. **Only organization and state lay
 
 | Aspect | Choice |
 | --- | --- |
-| State isolation | **One state per deployment unit** (all four modules in one root) |
+| State isolation | **One S3 key per deployment unit** (`opentofu/<env>/<region>/terraform.tfstate`) |
 | Config selection | `locals` with early-evaluated maps keyed by `environment` and `region`; minimal tfvars |
 | Module wiring | Unit `main.tf` calls all four shared modules |
 | DRY mechanism | Shared `config/locals.tf` included via symlink or copy; env-specific values resolved in locals before module calls |
