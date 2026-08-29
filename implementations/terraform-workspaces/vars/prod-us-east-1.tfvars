@@ -1,0 +1,11 @@
+environment             = "prod"
+region                  = "us-east-1"
+vpc_cidr                = "10.31.0.0/16"
+replica_count           = 4
+instance_size           = "large"
+app_version             = "1.0.0"
+storage_gb              = 100
+high_availability       = true
+backup_retention_days   = 30
+log_retention_days      = 90
+cpu_alarm_threshold     = 75
