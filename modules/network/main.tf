@@ -1,5 +1,12 @@
+module "naming" {
+  source = "../naming"
+
+  environment = var.environment
+  region      = var.region
+}
+
 locals {
-  name_prefix = "thesis-${var.environment}-${replace(var.region, "-", "")}"
+  name_prefix = module.naming.prefix
 }
 
 resource "aws_vpc" "this" {

@@ -1,10 +1,20 @@
-locals {
-  name_prefix = "thesis-${var.environment}-${replace(var.region, "-", "")}"
+module "naming" {
+  source = "../naming"
+
+  environment = var.environment
+  region      = var.region
 }
 
-# Object storage for media assets (all environments)
+locals {
+  name_prefix = module.naming.prefix
+}
+
+data "aws_caller_identity" "current" {}
+
+# Object storage for media assets (all environments). Account id is required
+# because S3 names are global; four predictable thesis-*-media names collide.
 resource "aws_s3_bucket" "media" {
-  bucket = "${local.name_prefix}-media"
+  bucket = "${local.name_prefix}-media-${data.aws_caller_identity.current.account_id}"
 
   tags = merge(var.tags, {
     Name = "${local.name_prefix}-media"

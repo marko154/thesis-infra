@@ -88,7 +88,14 @@ Examples:
 
 Resources follow: `thesis-{environment}-{region_short}-{component}`
 
-Example: `thesis-prod-use1-app`
+Short codes live in one shared map (`modules/naming`): `eu-central-1` → `euc1`, `us-east-1` → `use1`. Adding a region is one edit there.
+
+Example: `thesis-prod-use1-eks` (EKS cluster in `prod` / `us-east-1`).
+
+S3 media buckets are globally unique, so they append the AWS account id:
+
+`thesis-{environment}-{region_short}-media-{account_id}`
+
 
 ## Equivalence rules
 
