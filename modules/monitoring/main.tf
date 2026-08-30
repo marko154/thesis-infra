@@ -9,31 +9,34 @@ locals {
   name_prefix = module.naming.prefix
 }
 
+# Own name: EKS creates /aws/eks/<cluster>/cluster when control-plane logging is on.
 resource "aws_cloudwatch_log_group" "application" {
-  name              = "/aws/eks/${var.cluster_name}/cluster"
+  name              = "/aws/thesis/${var.cluster_name}"
   retention_in_days = var.log_retention_days
 
   tags = merge(var.tags, {
-    Name = "${local.name_prefix}-eks-logs"
+    Name = "${local.name_prefix}-logs"
   })
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  alarm_name          = "${local.name_prefix}-node-cpu-high"
+  for_each = var.db_identifiers
+
+  alarm_name          = "${local.name_prefix}-${each.key}-cpu-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
-  metric_name         = "node_cpu_utilization"
-  namespace           = "ContainerInsights"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
   period              = 300
   statistic           = "Average"
   threshold           = var.cpu_alarm_threshold
-  alarm_description   = "EKS node CPU utilization high for ${local.name_prefix}"
+  alarm_description   = "RDS CPU utilization high for ${each.value}"
 
   dimensions = {
-    ClusterName = var.cluster_name
+    DBInstanceIdentifier = each.value
   }
 
   tags = merge(var.tags, {
-    Name = "${local.name_prefix}-cpu-alarm"
+    Name = "${local.name_prefix}-${each.key}-cpu-alarm"
   })
 }

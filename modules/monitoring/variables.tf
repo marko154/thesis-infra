@@ -15,7 +15,13 @@ variable "cpu_alarm_threshold" {
 }
 
 variable "cluster_name" {
-  type = string
+  type        = string
+  description = "EKS cluster name, used only to stamp the log group we own."
+}
+
+variable "db_identifiers" {
+  type        = map(string)
+  description = "Map of service name → RDS identifier for CPU alarms."
 }
 
 variable "tags" {

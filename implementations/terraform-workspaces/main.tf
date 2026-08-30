@@ -42,14 +42,16 @@ module "application" {
 module "database" {
   source = "../../modules/database"
 
-  environment           = var.environment
-  region                = var.region
-  instance_size         = var.instance_size
-  storage_gb            = var.storage_gb
-  high_availability     = var.high_availability
-  backup_retention_days = var.backup_retention_days
-  subnet_ids            = module.network.private_subnet_ids
-  tags                  = local.common_tags
+  environment               = var.environment
+  region                    = var.region
+  instance_size             = var.instance_size
+  storage_gb                = var.storage_gb
+  high_availability         = var.high_availability
+  backup_retention_days     = var.backup_retention_days
+  subnet_ids                = module.network.private_subnet_ids
+  vpc_id                    = module.network.vpc_id
+  allowed_security_group_id = module.application.cluster_security_group_id
+  tags                      = local.common_tags
 }
 
 module "monitoring" {
@@ -60,5 +62,6 @@ module "monitoring" {
   log_retention_days  = var.log_retention_days
   cpu_alarm_threshold = var.cpu_alarm_threshold
   cluster_name        = module.application.cluster_name
+  db_identifiers      = module.database.db_identifiers
   tags                = local.common_tags
 }

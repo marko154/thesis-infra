@@ -20,8 +20,8 @@ Each deployment unit composes the same five modules:
 1. **network** — VPC, two public and two private subnets, internet gateway, NAT egress for private subnets, EKS load-balancer subnet tags, node and cluster security groups
 2. **edge** — S3 media bucket + Route53 for all units; CloudFront CDN only in `prod` (`enable_cdn`)
 3. **application** — EKS cluster + managed node group (replicas, instance size, app version)
-4. **database** — three RDS PostgreSQL instances (users, metadata, favorites), shared sizing/HA/backup settings
-5. **monitoring** — CloudWatch log group for EKS, CPU alarm (Container Insights)
+4. **database** — three RDS PostgreSQL instances (users, metadata, favorites), encrypted storage, security group allowing PostgreSQL only from the EKS cluster security group
+5. **monitoring** — CloudWatch log group owned by the module, CPU alarm on RDS `CPUUtilization`
 
 AWS mapping from the reference architecture diagram:
 

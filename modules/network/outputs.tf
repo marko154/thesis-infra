@@ -15,7 +15,7 @@ output "vpc_cidr" {
 }
 
 output "node_security_group_id" {
-  description = "Security group for the EKS node group (ticket 32 wires RDS to this)."
+  description = "Additional node security group. Managed node groups do not use it without a launch template; RDS ingress uses the EKS cluster SG instead."
   value       = aws_security_group.nodes.id
 }
 

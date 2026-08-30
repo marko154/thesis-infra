@@ -39,14 +39,16 @@ module "application" {
 module "database" {
   source = "../../../../../modules/database"
 
-  environment           = module.settings.environment
-  region                = module.settings.region
-  instance_size         = module.settings.instance_size
-  storage_gb            = module.settings.storage_gb
-  high_availability     = module.settings.high_availability
-  backup_retention_days = module.settings.backup_retention_days
-  subnet_ids            = module.network.private_subnet_ids
-  tags                  = module.settings.common_tags
+  environment               = module.settings.environment
+  region                    = module.settings.region
+  instance_size             = module.settings.instance_size
+  storage_gb                = module.settings.storage_gb
+  high_availability         = module.settings.high_availability
+  backup_retention_days     = module.settings.backup_retention_days
+  subnet_ids                = module.network.private_subnet_ids
+  vpc_id                    = module.network.vpc_id
+  allowed_security_group_id = module.application.cluster_security_group_id
+  tags                      = module.settings.common_tags
 }
 
 module "monitoring" {
@@ -57,5 +59,6 @@ module "monitoring" {
   log_retention_days  = module.settings.log_retention_days
   cpu_alarm_threshold = module.settings.cpu_alarm_threshold
   cluster_name        = module.application.cluster_name
+  db_identifiers      = module.database.db_identifiers
   tags                = module.settings.common_tags
 }
