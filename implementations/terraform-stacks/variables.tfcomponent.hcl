@@ -1,3 +1,14 @@
+variable "identity_token" {
+  type        = string
+  ephemeral   = true
+  description = "OIDC JWT from identity_token.aws in deployments.tfdeploy.hcl."
+}
+
+variable "role_arn" {
+  type        = string
+  description = "IAM role ARN assumed via web identity for this deployment."
+}
+
 variable "environment" {
   type        = string
   description = "Deployment environment (dev, stage, prod)."
@@ -42,10 +53,6 @@ variable "log_retention_days" {
 
 variable "cpu_alarm_threshold" {
   type = number
-}
-
-variable "domain_name" {
-  type = string
 }
 
 variable "enable_cdn" {

@@ -1,4 +1,5 @@
 locals {
+  domain_name = "${var.environment}.${var.region}.thesis-app.example"
   common_tags = {
     Environment = var.environment
     Region      = var.region
@@ -27,7 +28,7 @@ component "edge" {
   inputs = {
     environment = var.environment
     region      = var.region
-    domain_name = var.domain_name
+    domain_name = local.domain_name
     enable_cdn  = var.enable_cdn
     tags        = local.common_tags
   }

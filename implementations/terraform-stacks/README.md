@@ -1,20 +1,19 @@
-# Terraform Stacks (exploratory)
+# Terraform Stacks
 
-Sketch of the same reference scenario as a HashiCorp **Terraform Stack**:
+Same reference scenario as the other approaches, as a HashiCorp **Terraform Stack**:
 
 - `*.tfcomponent.hcl` — shared component graph (network, edge, application, database, monitoring)
 - `*.tfdeploy.hcl` — one `deployment` block per thesis unit (4 total)
+- OIDC: `identity_token "aws"` + `assume_role_with_web_identity` (IAM role is a placeholder until HCP is wired)
 
 ## Local vs HCP
 
 | Action | Where |
 | --- | --- |
-| `terraform stacks init` / `validate` / `fmt` | Local CLI (Terraform ≥ 1.13) |
+| `terraform stacks init` / `validate` / `fmt` | Local CLI after `terraform login` (stacksplugin is signed by HCP) |
 | Deployment plan / apply | **HCP Terraform only** (no local plan) |
 
 AWS provider constraint: `~> 6.0` (same major as the other approaches; see repo `README.md`).
-
-This lane is included to evaluate Stacks against the same scenario. Metric caveats (what is reproducible offline vs needs HCP) are discussed in `docs/archive/ANSWER.md`.
 
 ## Quick start (local structure check)
 
@@ -37,5 +36,3 @@ terraform stacks configuration upload \
   -project-name <PROJECT> \
   -stack-name thesis-ref
 ```
-
-Provider auth for real HCP plans is not wired yet (OIDC `identity_token` or varset). Add when you run a remote plan.
