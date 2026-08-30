@@ -11,16 +11,16 @@ How the three compared implementations differ. **Only organization and state lay
 
 ## 1. Terraform workspaces (`implementations/terraform-workspaces`)
 
-**Organization:** Single root module tree. Environment and region are selected at plan time.
+**Organization:** Single root module tree. The selected workspace *is* the deployment unit. A `locals` map keyed by `terraform.workspace` supplies every per-unit value. There are no var-files: selecting `prod-us-east-1` cannot apply `dev` values.
 
 | Aspect | Choice |
 | --- | --- |
 | State isolation | One S3 backend; **workspace per deployment unit** (`workspaces/<unit>/terraform.tfstate`) |
-| Config selection | `-var-file=vars/<unit>.tfvars` + workspace name encodes unit |
-| Module wiring | Root `main.tf` calls all four shared modules |
-| DRY mechanism | Shared `locals` defaults + per-unit tfvars overrides |
+| Config selection | `terraform workspace select <unit>` — name is the map key |
+| Module wiring | Root `main.tf` calls all five shared modules |
+| DRY mechanism | One `units` map in `locals.tf`. A per-unit change is an edit to that map, not a new file |
 
-**Rationale:** Workspaces primarily solve state partitioning within one root. Configuration duplication lives in var-files unless extracted to shared locals.
+**Rationale:** Workspaces partition state *and* bind configuration to the same name, so the classic var-file/workspace mismatch cannot happen. That is a CA3 change versus OpenTofu, which still defines units as tfvars because its backend key is interpolated at init.
 
 ## 2. Terragrunt (`implementations/terragrunt`)
 

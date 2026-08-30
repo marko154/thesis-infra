@@ -6,14 +6,15 @@ set -euo pipefail
 
 UNIT="${1:-dev-eu-central-1}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WS="$ROOT/implementations/terraform-workspaces"
 
 case "$UNIT" in
-  dev-eu-central-1)
-  terraform -chdir="$ROOT/implementations/terraform-workspaces" workspace select dev-eu-central-1
-  terraform -chdir="$ROOT/implementations/terraform-workspaces" plan -var-file=vars/dev-eu-central-1.tfvars
-  ;;
+  dev-eu-central-1 | stage-eu-central-1 | prod-eu-central-1 | prod-us-east-1)
+    terraform -chdir="$WS" workspace select "$UNIT"
+    terraform -chdir="$WS" plan
+    ;;
   *)
-  echo "Unsupported unit: $UNIT" >&2
-  exit 1
-  ;;
+    echo "Unsupported unit: $UNIT" >&2
+    exit 1
+    ;;
 esac

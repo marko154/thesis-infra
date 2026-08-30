@@ -1,40 +1,30 @@
-locals {
-  common_tags = {
-    Environment = var.environment
-    Region      = var.region
-    ManagedBy   = "thesis-harness"
-  }
-
-  domain_name = "${var.environment}.${var.region}.thesis-app.example"
-}
-
 module "network" {
   source = "../../modules/network"
 
-  environment = var.environment
-  region      = var.region
-  vpc_cidr    = var.vpc_cidr
+  environment = local.environment
+  region      = local.region
+  vpc_cidr    = local.unit.vpc_cidr
   tags        = local.common_tags
 }
 
 module "edge" {
   source = "../../modules/edge"
 
-  environment = var.environment
-  region      = var.region
+  environment = local.environment
+  region      = local.region
   domain_name = local.domain_name
-  enable_cdn  = var.environment == "prod"
+  enable_cdn  = local.environment == "prod"
   tags        = local.common_tags
 }
 
 module "application" {
   source = "../../modules/application"
 
-  environment   = var.environment
-  region        = var.region
-  instance_size = var.instance_size
-  replica_count = var.replica_count
-  app_version   = var.app_version
+  environment   = local.environment
+  region        = local.region
+  instance_size = local.unit.instance_size
+  replica_count = local.unit.replica_count
+  app_version   = local.unit.app_version
   subnet_ids    = module.network.private_subnet_ids
   tags          = local.common_tags
 }
@@ -42,12 +32,12 @@ module "application" {
 module "database" {
   source = "../../modules/database"
 
-  environment               = var.environment
-  region                    = var.region
-  instance_size             = var.instance_size
-  storage_gb                = var.storage_gb
-  high_availability         = var.high_availability
-  backup_retention_days     = var.backup_retention_days
+  environment               = local.environment
+  region                    = local.region
+  instance_size             = local.unit.instance_size
+  storage_gb                = local.unit.storage_gb
+  high_availability         = local.unit.high_availability
+  backup_retention_days     = local.unit.backup_retention_days
   subnet_ids                = module.network.private_subnet_ids
   vpc_id                    = module.network.vpc_id
   allowed_security_group_id = module.application.cluster_security_group_id
@@ -57,10 +47,10 @@ module "database" {
 module "monitoring" {
   source = "../../modules/monitoring"
 
-  environment         = var.environment
-  region              = var.region
-  log_retention_days  = var.log_retention_days
-  cpu_alarm_threshold = var.cpu_alarm_threshold
+  environment         = local.environment
+  region              = local.region
+  log_retention_days  = local.unit.log_retention_days
+  cpu_alarm_threshold = local.unit.cpu_alarm_threshold
   cluster_name        = module.application.cluster_name
   db_identifiers      = module.database.db_identifiers
   tags                = local.common_tags

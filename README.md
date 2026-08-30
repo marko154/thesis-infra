@@ -96,7 +96,7 @@ The thesis evaluation path uses **`terraform plan` / `tofu plan`** against AWS. 
 cd implementations/terraform-workspaces
 terraform init
 terraform workspace select dev-eu-central-1 || terraform workspace new dev-eu-central-1
-terraform plan -var-file=vars/dev-eu-central-1.tfvars
+terraform plan
 
 # OpenTofu (example: dev). -reconfigure when switching unit.
 cd implementations/opentofu

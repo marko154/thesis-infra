@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "==> terraform-workspaces"
 terraform -chdir="$ROOT/implementations/terraform-workspaces" fmt -check -recursive
+terraform -chdir="$ROOT/implementations/terraform-workspaces" workspace select dev-eu-central-1
 terraform -chdir="$ROOT/implementations/terraform-workspaces" validate
 
 echo "==> opentofu (dev)"
