@@ -8,7 +8,7 @@ terraform -chdir="$ROOT/implementations/terraform-workspaces" fmt -check -recurs
 terraform -chdir="$ROOT/implementations/terraform-workspaces" validate
 
 echo "==> opentofu (dev)"
-tofu -chdir="$ROOT/implementations/opentofu/environments/dev/eu-central-1" fmt -check -recursive
-tofu -chdir="$ROOT/implementations/opentofu/environments/dev/eu-central-1" validate
+tofu -chdir="$ROOT/implementations/opentofu" fmt -check -recursive
+tofu -chdir="$ROOT/implementations/opentofu" validate
 
 echo "validate.sh: not yet wired for terragrunt or all deployment units"

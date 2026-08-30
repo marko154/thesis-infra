@@ -77,13 +77,15 @@ Key layout (one bucket, namespaced keys):
 | Approach | Keys |
 | --- | --- |
 | Workspaces | `workspaces/<unit>/terraform.tfstate` (S3 workspace prefix; one backend) |
-| OpenTofu | `opentofu/<env>/<region>/terraform.tfstate` (one key per unit root) |
+| OpenTofu | `opentofu/<env>/<region>/terraform.tfstate` (key interpolated from `var.environment` / `var.region`) |
 | Terragrunt | `terragrunt/<env>/<region>/<module>/terraform.tfstate` (one key per stack) |
 | Stacks | HCP-managed; not this bucket |
 
 The bucket name is `thesis-tfstate-<account_id>` in `eu-central-1`.
-Bootstrap derives it from the caller identity; the OSS backend blocks
-repeat the same literal (Terraform cannot interpolate a backend).
+Bootstrap derives it from the caller identity. Terraform backend
+blocks must repeat the bucket as a literal. OpenTofu interpolates the
+*key* from variables (early evaluation); the bucket and backend region
+stay literals because there is one bucket in `eu-central-1`.
 
 ## Plan-only workflow
 
@@ -96,10 +98,10 @@ terraform init
 terraform workspace select dev-eu-central-1 || terraform workspace new dev-eu-central-1
 terraform plan -var-file=vars/dev-eu-central-1.tfvars
 
-# OpenTofu (example: dev)
-cd implementations/opentofu/environments/dev/eu-central-1
-tofu init
-tofu plan
+# OpenTofu (example: dev). -reconfigure when switching unit.
+cd implementations/opentofu
+tofu init -reconfigure -var-file=vars/dev-eu-central-1.tfvars
+tofu plan     -var-file=vars/dev-eu-central-1.tfvars
 
 # Terragrunt (example: dev network stack)
 cd implementations/terragrunt/dev/eu-central-1/network

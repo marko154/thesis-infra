@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.6.0"
+  required_version = ">= 1.8.0"
 
   required_providers {
     aws = {
@@ -10,7 +10,7 @@ terraform {
 
   backend "s3" {
     bucket       = "thesis-tfstate-559338556370"
-    key          = "opentofu/stage/eu-central-1/terraform.tfstate"
+    key          = "opentofu/${var.environment}/${var.region}/terraform.tfstate"
     region       = "eu-central-1"
     encrypt      = true
     use_lockfile = true

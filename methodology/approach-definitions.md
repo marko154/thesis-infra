@@ -37,16 +37,16 @@ How the three compared implementations differ. **Only organization and state lay
 
 ## 3. OpenTofu (`implementations/opentofu`)
 
-**Organization:** Separate root per deployment unit under `environments/<env>/<region>/`. No Terragrunt.
+**Organization:** Single root module tree. Environment and region are selected with `-var-file`. The backend key is interpolated from those variables (OpenTofu 1.8+ early evaluation). Terraform rejects the same block (`Variables not allowed`).
 
 | Aspect | Choice |
 | --- | --- |
-| State isolation | **One S3 key per deployment unit** (`opentofu/<env>/<region>/terraform.tfstate`) |
-| Config selection | `locals` with early-evaluated maps keyed by `environment` and `region`; minimal tfvars |
-| Module wiring | Unit `main.tf` calls all four shared modules |
-| DRY mechanism | Shared `config/locals.tf` included via symlink or copy; env-specific values resolved in locals before module calls |
+| State isolation | **One S3 key per deployment unit**, derived at init: `opentofu/${var.environment}/${var.region}/terraform.tfstate`. Switch unit with `tofu init -reconfigure -var-file=…` |
+| Config selection | `-var-file=vars/<unit>.tfvars` |
+| Module wiring | Root `main.tf` calls all five shared modules |
+| DRY mechanism | Shared `locals` (tags, domain, CDN flag) + per-unit tfvars. No settings module |
 
-**Rationale:** Demonstrates OpenTofu-native configuration without Terragrunt—early variable evaluation and explicit per-unit roots instead of workspaces.
+**Rationale:** The one thing OpenTofu can do here that Terraform cannot: put variables in the backend block so a new unit is a new tfvars file, not a copied root and not a workspace.
 
 ## 4. Terraform Stacks (`implementations/terraform-stacks`) — proposed / exploratory
 
@@ -66,8 +66,8 @@ How the three compared implementations differ. **Only organization and state lay
 
 | Dimension | Workspaces | Terragrunt | OpenTofu |
 | --- | --- | --- | --- |
-| State files per unit | 1 (workspace) | 4 (per module stack) | 1 (per unit root) |
-| Root directories per unit | 1 shared | 4 stacks | 1 dedicated |
+| State files per unit | 1 (workspace) | 4 (per module stack) | 1 (derived S3 key) |
+| Root directories per unit | 1 shared | 4 stacks | 1 shared |
 | Extra tooling | Terraform only | Terragrunt + Terraform/OpenTofu | OpenTofu only |
 | Cross-module dependencies | In-root references | `dependency` blocks | In-root references |
 

@@ -6,7 +6,7 @@ Layouts for the same reference scenario. See [methodology/approach-definitions.m
 | --- | --- | --- | --- |
 | `terraform-workspaces/` | Terraform | One root, workspace per deployment unit | core comparison |
 | `terragrunt/` | Terragrunt + Terraform | One state per module stack per unit | core comparison |
-| `opentofu/` | OpenTofu | One root per deployment unit | core comparison |
+| `opentofu/` | OpenTofu | One root; state key from early-evaluated variables | core comparison |
 | `terraform-stacks/` | Terraform Stacks (HCP for plan) | One state per Stack deployment | exploratory / proposed 4th |
 
 Shared modules: [`../../modules/`](../../modules/)

@@ -1,0 +1,11 @@
+environment           = "stage"
+region                = "eu-central-1"
+vpc_cidr              = "10.20.0.0/16"
+replica_count         = 2
+instance_size         = "medium"
+app_version           = "1.0.0"
+storage_gb            = 50
+high_availability     = false
+backup_retention_days = 7
+log_retention_days    = 30
+cpu_alarm_threshold   = 80
