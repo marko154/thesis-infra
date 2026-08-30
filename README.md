@@ -54,6 +54,7 @@ mise install
 | Terraform | workspaces, Terragrunt, Stacks (`terraform`) | 1.15.9 |
 | OpenTofu | `implementations/opentofu` (`tofu`) | 1.12.6 |
 | Terragrunt | `implementations/terragrunt` | 1.1.3 |
+| AWS provider | all modules and all four approaches | `~> 6.0` |
 | AWS CLI / credentials | `plan` only | — |
 
 ## Remote state

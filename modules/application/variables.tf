@@ -23,8 +23,8 @@ variable "app_version" {
 
 variable "kubernetes_version" {
   type        = string
-  description = "EKS Kubernetes version"
-  default     = "1.29"
+  description = "EKS Kubernetes version (AWS standard support)"
+  default     = "1.36"
 }
 
 variable "subnet_ids" {

@@ -1,5 +1,6 @@
 # Exact CLI pins for every layout and measurement.
 # required_version in .tf files is a compatibility floor, not this pin.
+# AWS provider is pinned ~> 6.0 in module/approach versions files, not here.
 [tools]
 terraform = "1.15.9" # ≥ 1.13 for Stacks GA
 opentofu = "1.12.6"

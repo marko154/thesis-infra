@@ -12,6 +12,8 @@ Sketch of the same reference scenario as a HashiCorp **Terraform Stack**:
 | `terraform stacks init` / `validate` / `fmt` | Local CLI (Terraform ≥ 1.13) |
 | Deployment plan / apply | **HCP Terraform only** (no local plan) |
 
+AWS provider constraint: `~> 6.0` (same major as the other approaches; see repo `README.md`).
+
 This lane is included to evaluate Stacks against the same scenario. Metric caveats (what is reproducible offline vs needs HCP) are discussed in `docs/archive/ANSWER.md`.
 
 ## Quick start (local structure check)
