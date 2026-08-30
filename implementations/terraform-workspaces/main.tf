@@ -1,10 +1,11 @@
 module "network" {
   source = "../../modules/network"
 
-  environment = local.environment
-  region      = local.region
-  vpc_cidr    = local.unit.vpc_cidr
-  tags        = local.common_tags
+  environment       = local.environment
+  region            = local.region
+  vpc_cidr          = local.unit.vpc_cidr
+  high_availability = local.unit.high_availability
+  tags              = local.common_tags
 }
 
 module "edge" {
@@ -20,13 +21,14 @@ module "edge" {
 module "application" {
   source = "../../modules/application"
 
-  environment   = local.environment
-  region        = local.region
-  instance_size = local.unit.instance_size
-  replica_count = local.unit.replica_count
-  app_version   = local.unit.app_version
-  subnet_ids    = module.network.private_subnet_ids
-  tags          = local.common_tags
+  environment      = local.environment
+  region           = local.region
+  instance_size    = local.unit.instance_size
+  replica_count    = local.unit.replica_count
+  app_version      = local.unit.app_version
+  subnet_ids       = module.network.private_subnet_ids
+  media_bucket_arn = module.edge.media_bucket_arn
+  tags             = local.common_tags
 }
 
 module "database" {
@@ -53,5 +55,7 @@ module "monitoring" {
   cpu_alarm_threshold = local.unit.cpu_alarm_threshold
   cluster_name        = module.application.cluster_name
   db_identifiers      = module.database.db_identifiers
+  db_storage_gb       = local.unit.storage_gb
+  db_instance_size    = local.unit.instance_size
   tags                = local.common_tags
 }

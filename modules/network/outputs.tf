@@ -24,3 +24,13 @@ output "cluster_security_group_id" {
   value       = aws_security_group.cluster.id
 }
 
+output "nat_gateway_ids" {
+  description = "One entry per NAT gateway: a single shared gateway in non-prod, one per zone in prod."
+  value       = aws_nat_gateway.this[*].id
+}
+
+output "s3_endpoint_id" {
+  description = "Gateway endpoint keeping private-subnet S3 traffic off the NAT gateway."
+  value       = aws_vpc_endpoint.s3.id
+}
+

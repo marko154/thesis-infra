@@ -15,6 +15,9 @@ locals {
   }
 
   instance_type = lookup(local.instance_type_map, var.instance_size, local.instance_type_map.small)
+
+  app_namespace       = "thesis"
+  app_service_account = "thesis-app"
 }
 
 data "aws_iam_policy_document" "eks_cluster_assume" {
@@ -131,4 +134,89 @@ resource "aws_eks_node_group" "this" {
     aws_iam_role_policy_attachment.node_AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node_AmazonEC2ContainerRegistryReadOnly,
   ]
+}
+
+# Networking add-ons have to be in place before nodes join.
+resource "aws_eks_addon" "core" {
+  for_each = toset(["vpc-cni", "kube-proxy"])
+
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = each.key
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  tags = merge(var.tags, {
+    Name = "${local.name_prefix}-${each.key}"
+  })
+}
+
+# These two schedule pods, so they need the node group to exist first.
+resource "aws_eks_addon" "workload" {
+  for_each = toset(["coredns", "eks-pod-identity-agent"])
+
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = each.key
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  tags = merge(var.tags, {
+    Name = "${local.name_prefix}-${each.key}"
+  })
+
+  depends_on = [aws_eks_node_group.this]
+}
+
+# Pod Identity rather than IRSA: no OIDC provider and no certificate thumbprint
+# to maintain, and it is what EKS recommends for new clusters.
+data "aws_iam_policy_document" "app_assume" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:TagSession"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["pods.eks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "app" {
+  name               = "${local.name_prefix}-app"
+  assume_role_policy = data.aws_iam_policy_document.app_assume.json
+
+  tags = merge(var.tags, {
+    Name = "${local.name_prefix}-app-role"
+  })
+}
+
+data "aws_iam_policy_document" "app_media" {
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["${var.media_bucket_arn}/*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
+    resources = [var.media_bucket_arn]
+  }
+}
+
+resource "aws_iam_role_policy" "app_media" {
+  name   = "${local.name_prefix}-app-media"
+  role   = aws_iam_role.app.id
+  policy = data.aws_iam_policy_document.app_media.json
+}
+
+resource "aws_eks_pod_identity_association" "app" {
+  cluster_name    = aws_eks_cluster.this.name
+  namespace       = local.app_namespace
+  service_account = local.app_service_account
+  role_arn        = aws_iam_role.app.arn
+
+  tags = merge(var.tags, {
+    Name = "${local.name_prefix}-app-pod-identity"
+  })
+
+  depends_on = [aws_eks_addon.workload]
 }

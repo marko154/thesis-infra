@@ -12,3 +12,8 @@ output "db_names" {
   description = "Logical database names per service."
   value       = { for name, db in aws_db_instance.this : name => db.db_name }
 }
+
+output "kms_key_arn" {
+  description = "Customer-managed key encrypting RDS storage."
+  value       = aws_kms_key.rds.arn
+}

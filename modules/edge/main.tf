@@ -38,6 +38,44 @@ resource "aws_s3_bucket_ownership_controls" "media" {
   }
 }
 
+resource "aws_s3_bucket_versioning" "media" {
+  bucket = aws_s3_bucket.media.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Versioning without expiry grows forever, and failed multipart uploads are
+# billed until they are aborted.
+resource "aws_s3_bucket_lifecycle_configuration" "media" {
+  bucket = aws_s3_bucket.media.id
+
+  rule {
+    id     = "expire-noncurrent-versions"
+    status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+  }
+
+  rule {
+    id     = "abort-incomplete-uploads"
+    status = "Enabled"
+
+    filter {}
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.media]
+}
+
 # CDN only in prod (enable_cdn = true)
 resource "aws_cloudfront_origin_access_control" "media" {
   count = var.enable_cdn ? 1 : 0
@@ -47,6 +85,35 @@ resource "aws_cloudfront_origin_access_control" "media" {
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
+}
+
+# Cache policies replace the legacy forwarded_values block, which AWS has
+# deprecated for new distributions.
+resource "aws_cloudfront_cache_policy" "media" {
+  count = var.enable_cdn ? 1 : 0
+
+  name        = "${local.name_prefix}-media"
+  comment     = "Cache key for ${local.name_prefix} media objects"
+  default_ttl = 86400
+  min_ttl     = 1
+  max_ttl     = 31536000
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    enable_accept_encoding_brotli = true
+    enable_accept_encoding_gzip   = true
+
+    cookies_config {
+      cookie_behavior = "none"
+    }
+
+    headers_config {
+      header_behavior = "none"
+    }
+
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+  }
 }
 
 resource "aws_cloudfront_distribution" "media" {
@@ -70,13 +137,7 @@ resource "aws_cloudfront_distribution" "media" {
     target_origin_id       = "s3-media"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id        = aws_cloudfront_cache_policy.media[0].id
   }
 
   restrictions {

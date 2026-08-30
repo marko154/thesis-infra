@@ -11,6 +11,9 @@ locals {
   eks_tags = {
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
   }
+
+  az_count  = 2
+  nat_count = var.high_availability ? local.az_count : 1
 }
 
 data "aws_availability_zones" "available" {
@@ -28,7 +31,7 @@ resource "aws_vpc" "this" {
 }
 
 resource "aws_subnet" "public" {
-  count = 2
+  count = local.az_count
 
   vpc_id                  = aws_vpc.this.id
   cidr_block              = cidrsubnet(var.vpc_cidr, 4, count.index)
@@ -43,7 +46,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  count = 2
+  count = local.az_count
 
   vpc_id            = aws_vpc.this.id
   cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index + 8)
@@ -79,50 +82,60 @@ resource "aws_route" "public_internet" {
 }
 
 resource "aws_route_table_association" "public" {
-  count = 2
+  count = local.az_count
 
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
 resource "aws_eip" "nat" {
+  count = local.nat_count
+
   domain = "vpc"
 
   tags = merge(var.tags, {
-    Name = "${local.name_prefix}-nat-eip"
+    Name = "${local.name_prefix}-nat-eip-${count.index + 1}"
   })
 
   depends_on = [aws_internet_gateway.this]
 }
 
 resource "aws_nat_gateway" "this" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
+  count = local.nat_count
+
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
 
   tags = merge(var.tags, {
-    Name = "${local.name_prefix}-nat"
+    Name = "${local.name_prefix}-nat-${count.index + 1}"
   })
 }
 
+# One route table per NAT gateway. With a single NAT both private subnets share
+# it; with one NAT per zone each subnet routes out through its own zone.
 resource "aws_route_table" "private" {
+  count = local.nat_count
+
   vpc_id = aws_vpc.this.id
 
   tags = merge(var.tags, {
-    Name = "${local.name_prefix}-private-rt"
+    Name = "${local.name_prefix}-private-rt-${count.index + 1}"
   })
 }
 
 resource "aws_route" "private_nat" {
-  route_table_id         = aws_route_table.private.id
+  count = local.nat_count
+
+  route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.this.id
+  nat_gateway_id         = aws_nat_gateway.this[count.index].id
 }
 
 resource "aws_route_table_association" "private" {
-  count = 2
+  count = local.az_count
 
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[count.index % local.nat_count].id
 }
 
 resource "aws_security_group" "nodes" {
@@ -169,4 +182,19 @@ resource "aws_vpc_security_group_egress_rule" "cluster_all" {
   security_group_id = aws_security_group.cluster.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
+}
+
+# Gateway endpoint so S3 traffic from private subnets leaves via AWS's network
+# instead of the NAT gateway, which bills per gigabyte processed. The endpoint
+# itself is free. Interface endpoints are deliberately not used: they would be
+# redundant with the NAT gateway.
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.this.id
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = aws_route_table.private[*].id
+
+  tags = merge(var.tags, {
+    Name = "${local.name_prefix}-s3-endpoint"
+  })
 }

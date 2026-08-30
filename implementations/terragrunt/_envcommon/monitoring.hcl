@@ -1,3 +1,7 @@
+locals {
+  env_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+}
+
 dependency "application" {
   config_path = "../application"
 
@@ -25,6 +29,8 @@ terraform {
 }
 
 inputs = {
-  cluster_name   = dependency.application.outputs.cluster_name
-  db_identifiers = dependency.database.outputs.db_identifiers
+  cluster_name     = dependency.application.outputs.cluster_name
+  db_identifiers   = dependency.database.outputs.db_identifiers
+  db_storage_gb    = local.env_vars.locals.storage_gb
+  db_instance_size = local.env_vars.locals.instance_size
 }

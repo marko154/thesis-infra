@@ -31,6 +31,11 @@ variable "subnet_ids" {
   type = list(string)
 }
 
+variable "media_bucket_arn" {
+  type        = string
+  description = "Media bucket the application pods read and write via EKS Pod Identity."
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

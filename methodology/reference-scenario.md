@@ -17,11 +17,46 @@ Fixed scenario used for fair comparison across all three IaC organization approa
 
 Each deployment unit composes the same five modules:
 
-1. **network** — VPC, two public and two private subnets, internet gateway, NAT egress for private subnets, EKS load-balancer subnet tags, node and cluster security groups
-2. **edge** — S3 media bucket + Route53 for all units; CloudFront CDN only in `prod` (`enable_cdn`)
-3. **application** — EKS cluster + managed node group (replicas, instance size, app version)
-4. **database** — three RDS PostgreSQL instances (users, metadata, favorites), encrypted storage, security group allowing PostgreSQL only from the EKS cluster security group
-5. **monitoring** — CloudWatch log group owned by the module, CPU alarm on RDS `CPUUtilization`
+1. **network** — VPC, two public and two private subnets, internet gateway, NAT egress for private subnets, an S3 gateway endpoint, EKS load-balancer subnet tags, node and cluster security groups
+2. **edge** — S3 media bucket with versioning and lifecycle rules + Route53 for all units; CloudFront CDN and its cache policy only in `prod` (`enable_cdn`)
+3. **application** — EKS cluster + managed node group (replicas, instance size, app version), the four managed add-ons, and a Pod Identity role granting the application access to the media bucket
+4. **database** — three RDS PostgreSQL instances (users, metadata, favorites), storage encrypted with a customer-managed KMS key, a shared parameter group, security group allowing PostgreSQL only from the EKS cluster security group
+5. **monitoring** — CloudWatch log group owned by the module, SNS alarm topic, and three alarms per database instance (`CPUUtilization`, `FreeStorageSpace`, `DatabaseConnections`)
+
+### Module dependency graph
+
+Six edges, which every approach has to express through its own wiring mechanism:
+
+| From        | To          | Value passed                                        |
+| ----------- | ----------- | --------------------------------------------------- |
+| network     | application | private subnet ids                                   |
+| network     | database    | private subnet ids, VPC id                           |
+| edge        | application | media bucket ARN, for the Pod Identity role's policy |
+| application | database    | EKS cluster security group id                        |
+| application | monitoring  | cluster name                                         |
+| database    | monitoring  | RDS instance identifiers                             |
+
+### Egress
+
+Non-prod runs a single NAT gateway shared by both private subnets. `prod` runs one per
+availability zone, so a zone failure cannot strand egress for the surviving zone. This is the one
+place where prod differs from non-prod structurally rather than only in sizing, and it is driven
+by the same `high_availability` flag that sets RDS Multi-AZ.
+
+An S3 gateway endpoint keeps private-subnet S3 traffic — the application writing media — off the
+NAT gateway, which bills per gigabyte processed. Interface endpoints are deliberately not used:
+with a NAT gateway present they would be redundant.
+
+### Resource counts
+
+| Unit type | network | edge | application | database | monitoring | Total |
+| --------- | ------: | ---: | ----------: | -------: | ---------: | ----: |
+| non-prod  |      23 |    6 |          16 |       10 |         12 |    67 |
+| prod      |      27 |   11 |          16 |       10 |         12 |    76 |
+
+Four units give 286 resources in total. For the single-state approaches (workspaces, OpenTofu,
+Stacks) the largest single state is one whole unit, so 76. Terragrunt splits a unit across five
+states, so its largest single state is the prod network module, 27.
 
 AWS mapping from the reference architecture diagram:
 

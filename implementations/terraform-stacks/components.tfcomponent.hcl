@@ -11,10 +11,11 @@ component "network" {
   source = "../../modules/network"
 
   inputs = {
-    environment = var.environment
-    region      = var.region
-    vpc_cidr    = var.vpc_cidr
-    tags        = local.common_tags
+    environment       = var.environment
+    region            = var.region
+    vpc_cidr          = var.vpc_cidr
+    high_availability = var.high_availability
+    tags              = local.common_tags
   }
 
   providers = {
@@ -42,13 +43,14 @@ component "application" {
   source = "../../modules/application"
 
   inputs = {
-    environment   = var.environment
-    region        = var.region
-    instance_size = var.instance_size
-    replica_count = var.replica_count
-    app_version   = var.app_version
-    subnet_ids    = component.network.private_subnet_ids
-    tags          = local.common_tags
+    environment      = var.environment
+    region           = var.region
+    instance_size    = var.instance_size
+    replica_count    = var.replica_count
+    app_version      = var.app_version
+    subnet_ids       = component.network.private_subnet_ids
+    media_bucket_arn = component.edge.media_bucket_arn
+    tags             = local.common_tags
   }
 
   providers = {
@@ -87,6 +89,8 @@ component "monitoring" {
     cpu_alarm_threshold = var.cpu_alarm_threshold
     cluster_name        = component.application.cluster_name
     db_identifiers      = component.database.db_identifiers
+    db_storage_gb       = var.storage_gb
+    db_instance_size    = var.instance_size
     tags                = local.common_tags
   }
 
